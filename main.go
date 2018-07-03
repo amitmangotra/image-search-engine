@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
-	"strings"
+	"os"
 )
 
 func main() {
@@ -20,12 +23,9 @@ func main() {
 	apiDomain := "https://api.clarifai.com/v2/models/"
 	endpoint := "/outputs"
 
-	//invertedIndex map[string][]string
-	var invertedIndex = make(map[string][]string)
-
-	// type InvertedIndex struct {
-	// 	Tag []string `json: "tag"`
-	// }
+	type InvertedIndex struct {
+		Tag []string `json: "tag"`
+	}
 
 	type Image struct {
 		URL string `json:"url"`
@@ -85,87 +85,84 @@ func main() {
 		} `json: "outputs"`
 	}
 
-	// type ConceptAPIResponse struct {
-	// 	Status struct {
-	// 		Code        int64  `json: "code"`
-	// 		Description string `json: "description"`
-	// 	} `json: "status"`
-	// 	Outputs []struct {
-	// 		Id     string `json: "id"`
-	// 		Status struct {
-	// 			Code        int64  `json: "code"`
-	// 			Description string `json: "description"`
-	// 		} `json: "status"`
-	// 		CreatedAt string `json: "created_at"`
-	// 		Model     struct {
-	// 			ID         string `json: "id"`
-	// 			Name       string `json:"name"`
-	// 			CreatedAt  string `json: "created_at"`
-	// 			AppID      string `json: "app_id"`
-	// 			OutputInfo struct {
-	// 				Type    string `json: "type"`
-	// 				TypeExt string `json: "type_ext"`
-	// 			} `json: "output_info"`
-	// 			ModelVersion struct {
-	// 				ID        string `json: "id"`
-	// 				CreatedAt string `json: "created_at"`
-	// 				Status    struct {
-	// 					Code        int64  `json: "code"`
-	// 					Description string `json: "description"`
-	// 				} `json: "status"`
-	// 			} `json: "model_version"`
-	// 			DisplayName string `json: "display_name"`
-	// 		} `json: "model"`
-	// 		Input struct {
-	// 			ID   string `json: "id"`
-	// 			Data struct {
-	// 				Image struct {
-	// 					URL string `json:"url"`
-	// 				} `json: "image"`
-	// 			} `json: "data"`
-	// 		} `json: "input"`
-	// 		Data struct {
-	// 			Concepts []struct {
-	// 				Id    string  `json: "id"`
-	// 				Value float64 `json: "value"`
-	// 				Name  string  `json: "name"`
-	// 				AppId string  `json: "app_id"`
-	// 			} `json: "concepts"`
-	// 		} `json: "data"`
-	// 	} `json: "outputs"`
-	// }
+	type ImageBody struct {
+		URL string `json:"url"`
+	}
 
-	body := strings.NewReader(`{"inputs": [{"data": {"image": {"url": "https://farm7.staticflickr.com/5769/21094803716_da3cea21b8_o.jpg"}}}]}`)
+	type Data struct {
+		Image ImageBody `json:"image"`
+	}
 
-	req, err := http.NewRequest("POST", apiDomain+generalModelID+endpoint, body)
+	type Inputs struct {
+		Data Data `json:"data"`
+	}
+	type Payload struct {
+		Inputs []Inputs `json:"inputs"`
+	}
+
+	var urls []string
+
+	file, err := os.Open("images.txt")
 	if err != nil {
-		panic(err)
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", "Key "+apiKey)
-	req.Header.Set("Content-Type", "application/json")
+	defer file.Close()
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+	scanner := bufio.NewScanner(file)
 
-	result, _ := ioutil.ReadAll(resp.Body)
-
-	var responseObject ConceptAPIResponse
-	e := json.Unmarshal([]byte(result), &responseObject)
-	if e != nil {
-		panic(e)
+	for scanner.Scan() {
+		url := scanner.Text()
+		urls = append(urls, url)
+		// fmt.Println(strconv.CanBackquote(url))
 	}
 
-	// fmt.Println(result)
-	for _, item := range responseObject.Outputs[0].Data.Concepts {
-		invertedIndex[item.Name] = append(invertedIndex[item.Name], responseObject.Outputs[0].Input.Data.Image.URL)
-	}
+	for _, url := range urls {
+		pl := Payload{
+			Inputs: []Inputs{
+				{
+					Data: Data{
+						Image: ImageBody{
+							URL: url,
+						},
+					},
+				},
+			},
+		}
 
-	for k, v := range invertedIndex {
-		fmt.Println(k, "--", v)
+		payloadBytes, err := json.MarshalIndent(pl, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		body := bytes.NewReader(payloadBytes)
+
+		req, err := http.NewRequest("POST", apiDomain+generalModelID+endpoint, body)
+		if err != nil {
+			panic(err)
+		}
+
+		req.Header.Set("Authorization", "Key "+apiKey)
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			panic(err)
+		}
+
+		defer resp.Body.Close()
+
+		result, _ := ioutil.ReadAll(resp.Body)
+
+		var conceptResponse ConceptAPIResponse
+		e := json.Unmarshal([]byte(result), &conceptResponse)
+		if e != nil {
+			panic(e)
+		}
+
+		// fmt.Println(conceptResponse.Outputs[0])
+		for _, item := range conceptResponse.Outputs[0].Data.Concepts {
+			fmt.Print(item.Name, " ")
+		}
+		fmt.Println("-----------------------------")
 	}
 
 }
