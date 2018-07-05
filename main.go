@@ -294,11 +294,11 @@ func main() {
 				}
 			}
 		} else {
-			fmt.Println("No Image found")
+			fmt.Println("\nNo Image found")
 		}
 
 		// Checking if user wants to continue searching
-		fmt.Println("\nDo you want to continue?\nPress Y for Yes or any other key for No :")
+		fmt.Println("\nDo you want to continue?\nPress Y for Yes or any other alphabet for No:")
 		yesOrNo, _ := reader.ReadString('\n')
 		if strings.TrimRight(yesOrNo, "\n") != "Y" {
 			flag = false
