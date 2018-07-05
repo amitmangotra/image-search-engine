@@ -1,0 +1,17 @@
+Taking into consideration the given Inefficiencies in current MVP, there can be following future improvements:
+
+-> Adding more images to corpus will build a more reliable search engine for images.
+-> Instead of current Indexing technique of building Inverted Index, 
+we can use techniques like Single-Pass In-Memory Indexing (SPIMI) to efficiently build Inverted Index
+for our search engine as compared to current process. Even more efficient way to built the Inverted 
+Index is "Distributed Indexing" using MapReduce.
+-> Current MVP interface can be reconstructed to a GUI(Graphical User Interface) rather than a command-line interface
+in order to display images as compared to just giving image URLs as result.
+-> This MVP project can be structured into modules where each module has a specific task, 
+e.g. one module builds Inverted Index, some other module handles HTTP requests, 
+another module handles search for images etc.
+-> API key, Clarifai Predict General ModelID, API domain and endpoints can be saved in some environment variable 
+rather than hard-coding them.
+-> The number of concepts returned per image can be configured by changing the API call data with addition of MaxConcepts fields.
+-> The minimum prediction threshold for each concept can also be configured by changing the API call data.
+-> The current MVP can be dockerized to enforce continuous deployment and testing.

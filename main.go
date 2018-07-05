@@ -16,7 +16,7 @@ import (
 func main() {
 
 	// Clarifai API Key
-	apiKey := "b81350bd7ed74bf59252ebda1b2855fa"
+	apiKey := "c65bf7947a1d42c29d97a976dd2cd342"
 
 	// Model ID for General Predict Model
 	generalModelID := "aaa03c23b3724a16a56b629203edc62c"
@@ -122,7 +122,7 @@ func main() {
 
 	/*
 	 * Struct defined to store Image URL
-	 * and concept's probability
+	 * and concept's Probability for that image
 	 */
 	type Tuple struct {
 		URL         string
@@ -131,7 +131,7 @@ func main() {
 
 	/*
 	 * Map to store the inverted index consisting of
-	 * the concept name as keys and a tuple/pair of
+	 * the concept name as keys and a slice of tuple/pair of
 	 * image and concept's probability as values
 	 */
 	invertedIndex := make(map[string][]Tuple)
@@ -139,7 +139,7 @@ func main() {
 	/***************************************************************/
 
 	/*
-	 * Opening the given images file
+	 * Opening the given images file (images.txt)
 	 * and logging error
 	 */
 	file, err := os.Open("images.txt")
@@ -159,7 +159,7 @@ func main() {
 
 	/*
 	 * Scanning through the lines in file
-	 * and storing each line in file (i.e. URL) into a slice
+	 * and appending each line in file (i.e. URL) to a slice
 	 */
 	for scanner.Scan() {
 		url := scanner.Text()
@@ -194,7 +194,7 @@ func main() {
 			panic(err)
 		}
 
-		// Reading from Marshalled data
+		// Reading from Marshalled data to generate body
 		body := bytes.NewReader(payloadBytes)
 
 		// Making an HTTP POST request to Clarifai's Predict Service
@@ -233,8 +233,8 @@ func main() {
 
 		/*
 		 * Iterating through Parsed JSON Response to filter out all concepts
-		 * for a given image and storing each concept into a map as key with it's
-		 * input image url as value to construct an INVERTED INDEX
+		 * for a given image and storing each concept name into a map as key with it's
+		 * input image url and conceptas value to construct an INVERTED INDEX
 		 */
 		for _, item := range apiResponse.Outputs[0].Data.Concepts {
 			// Appending each concept to a slice to image URLs
@@ -243,7 +243,7 @@ func main() {
 		}
 
 		// Log information after each image url gets predicted and each concept related to it gets indexed
-		fmt.Println("Image", index+1, "concepts are predicted and each concept is indexed")
+		fmt.Println("Concepts in image", index+1, "are predicted and each concept is indexed")
 	}
 
 	/***************************************************************/
@@ -277,7 +277,7 @@ func main() {
 		 * If the term exists, the corresponding image URLs are printed out, otherwise,
 		 * "No Image Found" is printed out.
 		 */
-		if val, ok := invertedIndex[strings.TrimRight(text, "\n")]; ok {
+		if val, ok := invertedIndex[strings.ToLower(strings.TrimRight(text, "\n"))]; ok {
 			// Sorting the result by most probable images
 			sort.Slice(val, func(i, j int) bool {
 				return val[i].Probability > val[j].Probability

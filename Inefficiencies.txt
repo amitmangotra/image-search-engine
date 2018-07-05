@@ -1,0 +1,11 @@
+The following are some inefficiences with this Minimum Viable Product (MVP):
+
+-> The image corpus is small. There are only 1000 image URLs to build the 
+Inverted Index. This makes the search less reliable, e.g. for some terms/keywords there is no image.
+-> Currently, building Inverted Index for images is a slow process where 1000 image URLs 
+are predicted for concepts one by one, thereby taking 9-10 minutes for search engine to be ready.
+-> The current MVP is a command line interface, reading input from stdin and displaying image URLs.
+-> The MVP project is structured in a single file `main.go` to make HTTP requests, build Inverted Index
+and perform search for images.
+-> The API key, Clarifai Predict General ModelID, `images.txt` file, API Domain and endpoint are currently hard-coded.
+-> The current MVP predicts 20 concepts per image as default.

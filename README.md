@@ -10,4 +10,4 @@
 * Run `go build`.
 * Run `./clarifai` and wait for the Search Engine to be ready, while the system builds an *_INVERTED INDEX_*.
 * Interact with the interface on Terminal to search for images (i.e. type any term to search for images related to it), e.g. search for "exercise", "education", "architecture", "food" etc.
-* Press any other alphabet except "Y" and return to exit out of interface/system.
+* Press any other alphabet except "Y" and return, to exit out of interface/system.
